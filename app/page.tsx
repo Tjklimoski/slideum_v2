@@ -78,7 +78,7 @@ export default function Home() {
               return (
                 <motion.div
                   key={coord}
-                  className="bg bg-sky-700 w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab"
+                  className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab border-s border-t border-zinc-300 border-opacity-10"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}
                   drag="x"
@@ -88,7 +88,7 @@ export default function Home() {
                   }}
                   data-coord={coord}
                 >
-                  {/* {letter.toUpperCase()} */}
+                  {letter.toUpperCase()}
                 </motion.div>
               );
             })}
