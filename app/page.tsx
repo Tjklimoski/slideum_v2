@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
 import type { ResultMatrix } from "slideum_board_generator";
-import { motion, useVelocity, useMotionValue } from "framer-motion";
+import { PanInfo, motion, useMotionValue } from "framer-motion";
 
 export default function Home() {
   const [board, setBoard] = useState<ResultMatrix>([]);
@@ -11,13 +11,6 @@ export default function Home() {
   const boardSize = board.length;
 
   const x = useMotionValue(0);
-  const xVelocity = useVelocity(x);
-
-  useEffect(() => {
-    return xVelocity.on("change", latest => {
-      console.log("velocity: ", latest);
-    });
-  }, [xVelocity]);
 
   useEffect(() => {
     return x.on("change", latest => {
@@ -37,6 +30,20 @@ export default function Home() {
     generateBoard().then(board => setBoard(board));
   }, [board]);
 
+  // When I let go of the tiles they just keep going. need to have a dragend event
+  // Should this change to a onPan event? https://www.framer.com/motion/gestures/#pan
+  function handleDrag(e: MouseEvent | TouchEvent | PointerEvent, i: PanInfo) {
+    if (!gridRef.current) return x.set(0);
+
+    const tileTravelDistance =
+      // 16 is the size of the gap between cells in the grid
+      (gridRef.current.getBoundingClientRect().width - (boardSize - 1) * 16) /
+        boardSize +
+      16;
+    console.log("xAnimate: ", x.get() % tileTravelDistance);
+    x.set(x.get() % tileTravelDistance);
+  }
+
   return (
     <>
       <main className="h-[100dvh]">
@@ -49,9 +56,12 @@ export default function Home() {
         </button>
 
         <div className="absolute inset-0 grid place-items-center">
-          <div className="grid grid-cols-3 w-1/3 gap-4" ref={gridRef}>
+          {/* make grid-cols-3 dynamic to boardSize */}
+          <div
+            className="grid grid-cols-3 w-1/3 gap-4 touch-none"
+            ref={gridRef}
+          >
             {board.flat().map((letter, i) => {
-              // 3 is currently hard coded. is equal to board size
               const coord = `${Math.floor(i / boardSize)}${i % boardSize}`;
 
               return (
@@ -62,6 +72,10 @@ export default function Home() {
                   whileTap={{ scale: 0.98 }}
                   drag="x"
                   style={{ x }}
+                  // animate={{ x: xAnimate.get() }}
+                  onDrag={(e, i) => {
+                    handleDrag(e, i);
+                  }}
                   data-coord={coord}
                 >
                   {letter.toUpperCase()}
