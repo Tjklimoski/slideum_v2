@@ -7,6 +7,7 @@ import { motion, useVelocity, useMotionValue } from "framer-motion";
 
 export default function Home() {
   const [board, setBoard] = useState<ResultMatrix>([]);
+  const boardSize = board.length;
 
   const x = useMotionValue(0);
   const xVelocity = useVelocity(x);
@@ -50,7 +51,7 @@ export default function Home() {
           <div className="grid grid-cols-3 w-1/3 gap-4">
             {board.flat().map((letter, i) => {
               // 3 is currently hard coded. is equal to board size
-              const coord = `${Math.floor(i / 3)}${i % 3}`;
+              const coord = `${Math.floor(i / boardSize)}${i % boardSize}`;
 
               return (
                 <motion.div
