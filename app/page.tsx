@@ -49,14 +49,18 @@ export default function Home() {
         <div className="absolute inset-0 grid place-items-center">
           <div className="grid grid-cols-3 w-1/3 gap-4">
             {board.flat().map((letter, i) => {
+              // 3 is currently hard coded. is equal to board size
+              const coord = `${Math.floor(i / 3)}${i % 3}`;
+
               return (
                 <motion.div
-                  key={`${letter}${i}`}
+                  key={coord}
                   className="bg bg-sky-700 w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}
                   drag="x"
                   style={{ x }}
+                  data-coord={coord}
                 >
                   {letter.toUpperCase()}
                 </motion.div>
