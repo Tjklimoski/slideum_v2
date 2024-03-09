@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Generator } from "slideum_board_generator";
 import type { ResultMatrix } from "slideum_board_generator";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const [board, setBoard] = useState<ResultMatrix>([]);
@@ -30,12 +31,14 @@ export default function Home() {
         </button>
         <div className="grid grid-cols-3 w-1/3 m-auto gap-4">
           {board.flat().map((letter, i) => (
-            <div
+            <motion.div
               key={`${letter}${i}`}
-              className="bg bg-sky-700 w-full aspect-square rounded-md text-5xl flex justify-center items-center"
+              className="bg bg-sky-700 w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
             >
               {letter.toUpperCase()}
-            </div>
+            </motion.div>
           ))}
         </div>
       </main>
