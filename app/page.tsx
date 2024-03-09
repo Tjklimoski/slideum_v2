@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
 import type { ResultMatrix } from "slideum_board_generator";
 import { motion, useVelocity, useMotionValue } from "framer-motion";
 
 export default function Home() {
   const [board, setBoard] = useState<ResultMatrix>([]);
+  const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
 
   const x = useMotionValue(0);
@@ -48,7 +49,7 @@ export default function Home() {
         </button>
 
         <div className="absolute inset-0 grid place-items-center">
-          <div className="grid grid-cols-3 w-1/3 gap-4">
+          <div className="grid grid-cols-3 w-1/3 gap-4" ref={gridRef}>
             {board.flat().map((letter, i) => {
               // 3 is currently hard coded. is equal to board size
               const coord = `${Math.floor(i / boardSize)}${i % boardSize}`;
