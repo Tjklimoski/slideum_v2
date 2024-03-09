@@ -47,13 +47,24 @@ export default function Home() {
   return (
     <>
       <main className="h-[100dvh]">
-        <nav>Slideum</nav>
-        <button
-          className="px-4 py-2 bg-green-700 rounded-md block"
-          onClick={() => setBoard([])}
-        >
-          Generate board
-        </button>
+        <nav className="py-4 px-6 text-2xl bg-zinc-950 bg-opacity-25 backdrop-blur-md">
+          <h1>
+            Sl<span className="ms-1">i</span>
+            <span className="ms-2">d</span>
+            <span className="ms-3">e</span>
+            <span className="ms-4">u</span>
+            <span className="ms-5">m</span>
+          </h1>
+        </nav>
+
+        <div className="py-4 px-6">
+          <button
+            className="px-4 py-2 bg-green-700 rounded-md block"
+            onClick={() => setBoard([])}
+          >
+            Generate board
+          </button>
+        </div>
 
         <div className="absolute inset-0 grid place-items-center">
           {/* make grid-cols-3 dynamic to boardSize */}
@@ -72,13 +83,12 @@ export default function Home() {
                   whileTap={{ scale: 0.98 }}
                   drag="x"
                   style={{ x }}
-                  // animate={{ x: xAnimate.get() }}
                   onDrag={(e, i) => {
                     handleDrag(e, i);
                   }}
                   data-coord={coord}
                 >
-                  {letter.toUpperCase()}
+                  {/* {letter.toUpperCase()} */}
                 </motion.div>
               );
             })}
