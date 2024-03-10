@@ -13,7 +13,7 @@
     "next": "14.1.3",
     "react": "^18",
     "react-dom": "^18",
-    "slideum_board_generator": "file:slideum_board_generator-1.0.0.tgz"
+    "slideum_board_generator": "file:slideum_board_generator-1.0.1.tgz"
   },
   "devDependencies": {
     "@types/node": "^20",
