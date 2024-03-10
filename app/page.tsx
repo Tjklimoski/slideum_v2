@@ -18,6 +18,7 @@ export default function Home() {
   );
   const [dragDelta, setDragDelta] = useState<Point | undefined>(undefined);
   const [tileTravelDistance, setTileTravelDistance] = useState(0);
+  const [targetTile, setTargetTile] = useState<String | null>(null);
   const [locked, setLocked] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
@@ -76,7 +77,7 @@ export default function Home() {
   // Will need to use this .on() to modify the tile values while dragging
   useEffect(() => {
     const slideUnsubscribe = slide.on("change", latest => {
-      // console.log("slide: ", latest);
+      console.log("slide: ", latest);
     });
 
     return slideUnsubscribe;
@@ -94,12 +95,20 @@ export default function Home() {
     generateBoard().then(board => setBoard(board));
   }, [board]);
 
+  function handleDragStart(e: MouseEvent | TouchEvent | PointerEvent) {
+    // the EventTarget type attached to e.target doesn't have .getAttribute as a method
+    interface ExtendedEventTarget extends EventTarget {
+      getAttribute: (arg: string) => string | null;
+    }
+    const target = e.target as ExtendedEventTarget;
+    setTargetTile(target.getAttribute("data-coord"));
+  }
+
   function handleDrag(
     e: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) {
     if (tileTravelDistance === 0) return slide.set(0);
-
     setDragDelta(info.delta);
 
     // To slide the tile in relation to its cell's center point.
@@ -148,7 +157,16 @@ export default function Home() {
             ref={gridRef}
           >
             {board.flat().map((letter, i) => {
-              const coord = `${Math.floor(i / boardSize)}${i % boardSize}`;
+              const rowIndex = Math.floor(i / boardSize);
+              const colIndex = i % boardSize;
+              const coord = `${rowIndex}${colIndex}`;
+
+              // Build style object
+              const style = {
+                x: dragDirection === "x" ? slide : undefined,
+                y: dragDirection === "y" ? slide : undefined,
+                opacity: opacityStart,
+              };
 
               return (
                 <motion.div
@@ -158,25 +176,27 @@ export default function Home() {
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
                   drag={!locked}
-                  style={{
-                    x: dragDirection === "x" ? slide : undefined,
-                    y: dragDirection === "y" ? slide : undefined,
-                    opacity: opacityStart,
-                  }}
+                  style={style}
+                  onDragStart={handleDragStart}
                   onDrag={handleDrag}
                   dragSnapToOrigin={true}
-                  dragTransition={{ bounceStiffness: 1000, bounceDamping: 25 }}
+                  dragTransition={{
+                    bounceStiffness: 1000,
+                    bounceDamping: 25,
+                    timeConstant: 200,
+                  }}
                   dragDirectionLock
                   onDirectionLock={setDragDirection}
                   onDragEnd={() => {
                     // Lock to allow for animation back to center to play
-                    // prevents user trying to interact with board and prevents glitches
+                    // prevents user interacting with board, preventing glitches
                     // unlocks in onDragTransitionEnd
                     setLocked(true);
                   }}
                   onDragTransitionEnd={() => {
                     setDragDirection(undefined);
                     setLocked(false);
+                    setTargetTile(null);
                   }}
                   data-coord={coord}
                 >
