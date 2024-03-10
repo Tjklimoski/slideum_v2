@@ -40,6 +40,22 @@ export default function Home() {
     return 1;
   });
 
+  // Adjusty opacity of tiles at the start of the words (left and top of grid)
+  const opacityStart = useTransform(() => {
+    if (!gridRef.current || !dragDelta || !dragDirection) return 1;
+
+    const halfTileTravelDistance = tileTravelDistance / 2 - 2;
+    const delta = dragDelta[dragDirection];
+
+    if (delta >= 0 && slide.get() <= 0) {
+      return slide.get() / halfTileTravelDistance + 1;
+    }
+    if (delta < 0 && slide.get() <= 0) {
+      return Math.abs(slide.get() / halfTileTravelDistance);
+    }
+    return 1;
+  });
+
   // set tileTravelDistance
   useEffect(() => {
     // TODO: Update the distance when the window/grid element is resized
@@ -145,7 +161,7 @@ export default function Home() {
                   style={{
                     x: dragDirection === "x" ? slide : undefined,
                     y: dragDirection === "y" ? slide : undefined,
-                    opacity: opacityEnd,
+                    opacity: opacityStart,
                   }}
                   onDrag={handleDrag}
                   dragSnapToOrigin={true}
