@@ -7,17 +7,20 @@ import { PanInfo, motion, useMotionValue } from "framer-motion";
 
 export default function Home() {
   const [board, setBoard] = useState<ResultMatrix>([]);
+  const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
+    undefined
+  );
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
 
-  const x = useMotionValue(0);
+  const slide = useMotionValue(0);
 
   // Will need to use this .on() to modify the tile values while dragging
   useEffect(() => {
-    return x.on("change", latest => {
-      console.log("x: ", latest);
+    return slide.on("change", latest => {
+      console.log("slide: ", latest);
     });
-  }, [x]);
+  }, [slide]);
 
   useEffect(() => {
     if (board.length !== 0) return;
@@ -32,7 +35,7 @@ export default function Home() {
   }, [board]);
 
   function handleDrag(e: MouseEvent | TouchEvent | PointerEvent, i: PanInfo) {
-    if (!gridRef.current) return x.set(0);
+    if (!gridRef.current) return slide.set(0);
 
     const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
 
@@ -45,17 +48,17 @@ export default function Home() {
 
     // To slide the tile in relation to its cell's center point.
     // the tile will remain closest to the center point of its own cell.
-    // keep the value of xPos within the range of tileTravelDistance,
-    // with x at 0 being centered in the range.
-    // if range is 100, and x is 51, xPos is -49.
+    // keep the value of slidePos within the range of tileTravelDistance,
+    // with slide at 0 being centered in the range.
+    // if range is 100, and slide is 51, slidePos is -49.
     // https://math.stackexchange.com/questions/3838296/integer-function-that-loops-over-a-range
-    const xPos =
-      Math.sign(x.get()) *
-      (((Math.abs(x.get()) + (tileTravelDistance / 2 - 1)) %
+    const slidePos =
+      Math.sign(slide.get()) *
+      (((Math.abs(slide.get()) + (tileTravelDistance / 2 - 1)) %
         tileTravelDistance) -
         (tileTravelDistance / 2 - 1));
 
-    x.set(xPos);
+    slide.set(slidePos);
   }
 
   return (
@@ -98,17 +101,21 @@ export default function Home() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   whileDrag={{ scale: 1 }}
-                  drag={true}
-                  style={{ x }}
-                  onDrag={(e, i) => {
-                    handleDrag(e, i);
+                  drag
+                  style={{
+                    x: dragDirection === "x" ? slide : undefined,
+                    y: dragDirection === "y" ? slide : undefined,
                   }}
+                  onDrag={handleDrag}
                   dragSnapToOrigin={true}
                   dragTransition={{ bounceStiffness: 1000, bounceDamping: 20 }}
                   dragDirectionLock
-                  onDirectionLock={axis => {
-                    console.log("DIRECTION");
-                    console.log(axis);
+                  onDirectionLock={setDragDirection}
+                  onDragEnd={() => {
+                    // Lock touch/mouse events from occuring on board until onDragTransitionEnd. this will prevent glitching from swiping too fast
+                  }}
+                  onDragTransitionEnd={() => {
+                    setDragDirection(undefined);
                   }}
                   data-coord={coord}
                 >
