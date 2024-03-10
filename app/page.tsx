@@ -17,6 +17,7 @@ export default function Home() {
     undefined
   );
   const [dragDelta, setDragDelta] = useState<Point | undefined>(undefined);
+  const [tileTravelDistance, setTileTravelDistance] = useState(0);
   const [locked, setLocked] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
@@ -27,18 +28,8 @@ export default function Home() {
   const opacityEnd = useTransform(() => {
     if (!gridRef.current || !dragDelta || !dragDirection) return 1;
 
+    const halfTileTravelDistance = tileTravelDistance / 2 - 2;
     const delta = dragDelta[dragDirection];
-
-    const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
-
-    // The width of one cell, plus one gap width, divided in half, minus 2
-    const halfTileTravelDistance =
-      ((gridRef.current.getBoundingClientRect().width -
-        (boardSize - 1) * gridGap) /
-        boardSize +
-        gridGap) /
-        2 -
-      2;
 
     if (delta >= 0 && slide.get() >= 0) {
       return Math.abs(slide.get() / halfTileTravelDistance - 1);
@@ -48,6 +39,23 @@ export default function Home() {
     }
     return 1;
   });
+
+  // set tileTravelDistance
+  useEffect(() => {
+    // TODO: Update the distance when the window/grid element is resized
+    if (!gridRef.current) return;
+
+    const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
+
+    // The width of one cell, plus one gap width
+    const travelDistance =
+      (gridRef.current.getBoundingClientRect().width -
+        (boardSize - 1) * gridGap) /
+        boardSize +
+      gridGap;
+
+    setTileTravelDistance(travelDistance);
+  }, [gridRef, boardSize]);
 
   // Will need to use this .on() to modify the tile values while dragging
   useEffect(() => {
@@ -74,18 +82,9 @@ export default function Home() {
     e: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) {
-    if (!gridRef.current) return slide.set(0);
+    if (tileTravelDistance === 0) return slide.set(0);
 
     setDragDelta(info.delta);
-
-    const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
-
-    // The width of one cell, plus one gap width
-    const tileTravelDistance =
-      (gridRef.current.getBoundingClientRect().width -
-        (boardSize - 1) * gridGap) /
-        boardSize +
-      gridGap;
 
     // To slide the tile in relation to its cell's center point.
     // the tile will remain closest to the center point of its own cell.
