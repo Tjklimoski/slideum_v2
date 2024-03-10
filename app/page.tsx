@@ -12,6 +12,7 @@ export default function Home() {
 
   const x = useMotionValue(0);
 
+  // Will need to use this .on() to modify the tile values while dragging
   useEffect(() => {
     return x.on("change", latest => {
       console.log("x: ", latest);
@@ -30,8 +31,6 @@ export default function Home() {
     generateBoard().then(board => setBoard(board));
   }, [board]);
 
-  // When I let go of the tiles they just keep going. need to have a dragend event
-  // Should this change to a onPan event? https://www.framer.com/motion/gestures/#pan
   function handleDrag(e: MouseEvent | TouchEvent | PointerEvent, i: PanInfo) {
     if (!gridRef.current) return x.set(0);
 
@@ -44,10 +43,10 @@ export default function Home() {
         boardSize +
       gridGap;
 
-    // To slide the tile in relation to it's cell's center point.
-    // the tile will remain closest to the center point of it's own cell.
+    // To slide the tile in relation to its cell's center point.
+    // the tile will remain closest to the center point of its own cell.
     // keep the value of xPos within the range of tileTravelDistance,
-    // with x of 0 being centered in the range.
+    // with x at 0 being centered in the range.
     // if range is 100, and x is 51, xPos is -49.
     // https://math.stackexchange.com/questions/3838296/integer-function-that-loops-over-a-range
     const xPos =
@@ -105,6 +104,7 @@ export default function Home() {
                     handleDrag(e, i);
                   }}
                   dragSnapToOrigin={true}
+                  dragTransition={{ bounceStiffness: 1000, bounceDamping: 20 }}
                   dragDirectionLock
                   onDirectionLock={axis => {
                     console.log("DIRECTION");
