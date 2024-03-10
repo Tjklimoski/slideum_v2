@@ -3,24 +3,59 @@
 import { useEffect, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
 import type { ResultMatrix } from "slideum_board_generator";
-import { PanInfo, motion, useMotionValue } from "framer-motion";
+import {
+  PanInfo,
+  Point,
+  motion,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
 
 export default function Home() {
   const [board, setBoard] = useState<ResultMatrix>([]);
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
     undefined
   );
+  const [dragDelta, setDragDelta] = useState<Point | undefined>(undefined);
   const [locked, setLocked] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
 
   const slide = useMotionValue(0);
 
+  // Adjusty opacity of tiles at the end of the words (right and bottom of grid)
+  const opacityEnd = useTransform(() => {
+    if (!gridRef.current || !dragDelta || !dragDirection) return 1;
+
+    const delta = dragDelta[dragDirection];
+
+    const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
+
+    // The width of one cell, plus one gap width, divided in half, minus 2
+    const halfTileTravelDistance =
+      ((gridRef.current.getBoundingClientRect().width -
+        (boardSize - 1) * gridGap) /
+        boardSize +
+        gridGap) /
+        2 -
+      2;
+
+    if (delta >= 0 && slide.get() >= 0) {
+      return Math.abs(slide.get() / halfTileTravelDistance - 1);
+    }
+    if (delta < 0 && slide.get() >= 0) {
+      return slide.get() / halfTileTravelDistance;
+    }
+    return 1;
+  });
+
   // Will need to use this .on() to modify the tile values while dragging
   useEffect(() => {
-    return slide.on("change", latest => {
-      console.log("slide: ", latest);
+    const slideUnsubscribe = slide.on("change", latest => {
+      // console.log("slide: ", latest);
     });
+
+    return slideUnsubscribe;
   }, [slide]);
 
   useEffect(() => {
@@ -35,8 +70,13 @@ export default function Home() {
     generateBoard().then(board => setBoard(board));
   }, [board]);
 
-  function handleDrag(e: MouseEvent | TouchEvent | PointerEvent, i: PanInfo) {
+  function handleDrag(
+    e: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) {
     if (!gridRef.current) return slide.set(0);
+
+    setDragDelta(info.delta);
 
     const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
 
@@ -106,6 +146,7 @@ export default function Home() {
                   style={{
                     x: dragDirection === "x" ? slide : undefined,
                     y: dragDirection === "y" ? slide : undefined,
+                    opacity: opacityEnd,
                   }}
                   onDrag={handleDrag}
                   dragSnapToOrigin={true}
