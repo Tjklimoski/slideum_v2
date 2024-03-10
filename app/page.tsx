@@ -81,10 +81,10 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="absolute inset-0 grid place-items-center">
+        <div className="absolute inset-0 grid place-items-center pointer-events-none">
           {/* make grid-cols-3 dynamic to boardSize */}
           <div
-            className="grid grid-cols-3 w-1/3 gap-4 touch-none"
+            className="grid grid-cols-3 w-1/3 gap-4 touch-none pointer-events-auto"
             ref={gridRef}
           >
             {board.flat().map((letter, i) => {
