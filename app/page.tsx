@@ -73,12 +73,14 @@ export default function Home() {
         </nav>
 
         <div className="py-4 px-6">
-          <button
+          <motion.button
             className="px-4 py-2 bg-green-700 rounded-full block"
             onClick={() => setBoard([])}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", bounce: 0.65 }}
           >
             Generate board
-          </button>
+          </motion.button>
         </div>
 
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
@@ -97,10 +99,16 @@ export default function Home() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   whileDrag={{ scale: 1 }}
-                  drag="x"
+                  drag={true}
                   style={{ x }}
                   onDrag={(e, i) => {
                     handleDrag(e, i);
+                  }}
+                  dragSnapToOrigin={true}
+                  dragDirectionLock
+                  onDirectionLock={axis => {
+                    console.log("DIRECTION");
+                    console.log(axis);
                   }}
                   data-coord={coord}
                 >
