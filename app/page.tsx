@@ -10,6 +10,7 @@ export default function Home() {
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
     undefined
   );
+  const [locked, setLocked] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
 
@@ -85,7 +86,7 @@ export default function Home() {
           </motion.button>
         </div>
 
-        <div className="absolute inset-0 grid place-items-center pointer-events-none">
+        <div className="absolute inset-0 grid place-items-center pointer-events-none ">
           {/* make grid-cols-3 dynamic to boardSize */}
           <div
             className="grid grid-cols-3 w-1/3 gap-4 touch-none pointer-events-auto"
@@ -97,25 +98,29 @@ export default function Home() {
               return (
                 <motion.div
                   key={coord}
-                  className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab border-s border-t border-zinc-300 border-opacity-10"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10"
+                  whileHover={{ scale: !locked ? 1.05 : 1 }}
+                  whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
-                  drag
+                  drag={!locked}
                   style={{
                     x: dragDirection === "x" ? slide : undefined,
                     y: dragDirection === "y" ? slide : undefined,
                   }}
                   onDrag={handleDrag}
                   dragSnapToOrigin={true}
-                  dragTransition={{ bounceStiffness: 1000, bounceDamping: 20 }}
+                  dragTransition={{ bounceStiffness: 1000, bounceDamping: 25 }}
                   dragDirectionLock
                   onDirectionLock={setDragDirection}
                   onDragEnd={() => {
-                    // Lock touch/mouse events from occuring on board until onDragTransitionEnd. this will prevent glitching from swiping too fast
+                    // Lock to allow for animation back to center to play
+                    // prevents user trying to interact with board and prevents glitches
+                    // unlocks in onDragTransitionEnd
+                    setLocked(true);
                   }}
                   onDragTransitionEnd={() => {
                     setDragDirection(undefined);
+                    setLocked(false);
                   }}
                   data-coord={coord}
                 >
