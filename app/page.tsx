@@ -35,13 +35,28 @@ export default function Home() {
   function handleDrag(e: MouseEvent | TouchEvent | PointerEvent, i: PanInfo) {
     if (!gridRef.current) return x.set(0);
 
+    const gridGap = parseInt(window.getComputedStyle(gridRef.current).gap);
+
+    // The width of one cell, plus one gap width
     const tileTravelDistance =
-      // 16 is the size of the gap between cells in the grid
-      (gridRef.current.getBoundingClientRect().width - (boardSize - 1) * 16) /
+      (gridRef.current.getBoundingClientRect().width -
+        (boardSize - 1) * gridGap) /
         boardSize +
-      16;
-    console.log("xAnimate: ", x.get() % tileTravelDistance);
-    x.set(x.get() % tileTravelDistance);
+      gridGap;
+
+    // To slide the tile in relation to it's cell's center point.
+    // the tile will remain closest to the center point of it's own cell.
+    // keep the value of xPos within the range of tileTravelDistance,
+    // with x of 0 being centered in the range.
+    // if range is 100, and x is 51, xPos is -49.
+    // https://math.stackexchange.com/questions/3838296/integer-function-that-loops-over-a-range
+    const xPos =
+      Math.sign(x.get()) *
+      (((Math.abs(x.get()) + (tileTravelDistance / 2 - 1)) %
+        tileTravelDistance) -
+        (tileTravelDistance / 2 - 1));
+
+    x.set(xPos);
   }
 
   return (
@@ -59,7 +74,7 @@ export default function Home() {
 
         <div className="py-4 px-6">
           <button
-            className="px-4 py-2 bg-green-700 rounded-md block"
+            className="px-4 py-2 bg-green-700 rounded-full block"
             onClick={() => setBoard([])}
           >
             Generate board
@@ -80,7 +95,8 @@ export default function Home() {
                   key={coord}
                   className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab border-s border-t border-zinc-300 border-opacity-10"
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.95 }}
+                  whileDrag={{ scale: 1 }}
                   drag="x"
                   style={{ x }}
                   onDrag={(e, i) => {
