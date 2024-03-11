@@ -8,6 +8,7 @@ import {
   Point,
   motion,
   useMotionValue,
+  useMotionValueEvent,
   useTransform,
 } from "framer-motion";
 
@@ -37,20 +38,21 @@ export default function Game() {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = Math.sqrt(board.length);
   const slide = useMotionValue(0);
+  const [previousSlidePos, setPreviousSlidePos] = useState(0);
 
-  const activeTiles = useMemo((): string[] => {
+  const activeTiles = useMemo((): Tile[] => {
     if (board.length === 0 || !targetTile || !dragDirection) return [];
 
     // If traveling in x direction, we want elements in the same row as the targetTile coord
     // If traveling in y direction, we want elements in the same col as the targetTile coord
     const indexPos = parseInt(targetTile[dragDirection === "x" ? 0 : 1]);
 
-    return board.reduce((arr: string[], tile) => {
+    return board.reduce((arr: Tile[], tile) => {
       if (
         (dragDirection === "x" && indexPos === tile.rowIndex) ||
         (dragDirection === "y" && indexPos === tile.colIndex)
       )
-        arr.push(tile.coord);
+        arr.push(tile);
       return arr;
     }, []);
   }, [targetTile, board, dragDirection]);
@@ -60,12 +62,11 @@ export default function Game() {
     if (!gridRef.current || !dragDelta || !dragDirection) return 1;
 
     const halfTileTravelDistance = tileTravelDistance / 2 - 2;
-    const delta = dragDelta[dragDirection];
 
-    if (delta >= 0 && slide.get() >= 0) {
+    if (dragDelta[dragDirection] >= 0 && slide.get() > 0) {
       return Math.abs(slide.get() / halfTileTravelDistance - 1);
     }
-    if (delta < 0 && slide.get() >= 0) {
+    if (dragDelta[dragDirection] < 0 && slide.get() > 0) {
       return slide.get() / halfTileTravelDistance;
     }
     return 1;
@@ -76,12 +77,11 @@ export default function Game() {
     if (!gridRef.current || !dragDelta || !dragDirection) return 1;
 
     const halfTileTravelDistance = tileTravelDistance / 2 - 2;
-    const delta = dragDelta[dragDirection];
 
-    if (delta >= 0 && slide.get() <= 0) {
+    if (dragDelta[dragDirection] >= 0 && slide.get() < 0) {
       return slide.get() / halfTileTravelDistance + 1;
     }
-    if (delta < 0 && slide.get() <= 0) {
+    if (dragDelta[dragDirection] < 0 && slide.get() < 0) {
       return Math.abs(slide.get() / halfTileTravelDistance);
     }
     return 1;
@@ -90,8 +90,7 @@ export default function Game() {
   // function to return back tile styles based on coords
   const getStyles = useCallback(
     (tile: Tile): MotionStyle => {
-      console.log("ACTIVE TILES: ", activeTiles);
-      if (activeTiles.includes(tile.coord)) {
+      if (activeTiles.some(activeTile => activeTile.coord === tile.coord)) {
         if (dragDirection === "x" && tile.colIndex % boardSize === 0) {
           return {
             x: slide,
@@ -136,6 +135,31 @@ export default function Game() {
     [dragDirection, slide, opacityEnd, opacityStart, boardSize, activeTiles]
   );
 
+  const shiftValues = useCallback(
+    (delta: number) => {
+      if (!dragDirection || delta === 0) return;
+      setBoard(currentBoard => {
+        return currentBoard.map(tile => {
+          if (activeTiles.some(activeTile => activeTile.coord === tile.coord)) {
+            // determine if we're using colIndex or rowIndex based on dragDirection
+            // x = colIndex. y = rowIndex (the index that's DIFFERENT between active tiles)
+            // if delta is positive, - 1. (tile takes the value of the tile to it's left)
+            // if delta is negative, + 1. (tile takes the value of the tile to it's right)
+            const activeTileIndex =
+              ((dragDirection === "x" ? tile.colIndex : tile.rowIndex) -
+                Math.sign(delta)) %
+              boardSize;
+            // using slice as activeTileIndex could be -1
+            const newValue = activeTiles.slice(activeTileIndex)[0].value;
+            return { ...tile, value: newValue };
+          }
+          return tile;
+        });
+      });
+    },
+    [setBoard, dragDirection, activeTiles, boardSize]
+  );
+
   // set tileTravelDistance
   useEffect(() => {
     // TODO: Update the distance when the window/grid element is resized
@@ -152,19 +176,6 @@ export default function Game() {
 
     setTileTravelDistance(travelDistance);
   }, [gridRef, boardSize]);
-
-  // Will need to use this .on() to modify the tile values while dragging
-  // change to useMotionValueEvent: https://www.framer.com/motion/use-motion-value-event/
-  useEffect(() => {
-    const slideUnsubscribe = slide.on("change", latest => {
-      // I get two values, one at the position of my mouse, and the other at the position of my tile after running through the handleDrag function.
-      // should I create a new motionValue called mousePosition, then use mousePosition.set() it at the start of the handleDrag function (which should recieve the pure mouse position). then use it's changeEvent to set the tile values?
-      // or should I call the function that changes the tile values in the handleDrag function, and pass it the event object (MouseEvent)?
-      console.log("slide: ", latest);
-    });
-
-    return slideUnsubscribe;
-  }, [slide]);
 
   useEffect(() => {
     if (board.length !== 0) return;
@@ -207,8 +218,8 @@ export default function Game() {
     e: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) {
-    // console.log("mousePos: ", slide);
     if (tileTravelDistance === 0) return slide.set(0);
+
     setDragDelta(info.delta);
 
     // To slide the tile in relation to its cell's center point.
@@ -223,6 +234,14 @@ export default function Game() {
         tileTravelDistance) -
         (tileTravelDistance / 2 - 1));
 
+    if (
+      Math.abs(previousSlidePos - slidePos) > tileTravelDistance / 2 &&
+      dragDirection
+    ) {
+      shiftValues(info.delta[dragDirection]);
+    }
+
+    setPreviousSlidePos(slidePos);
     slide.set(slidePos);
   }
 
