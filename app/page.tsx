@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
 import type { ResultMatrix } from "slideum_board_generator";
 import {
+  MotionStyle,
   PanInfo,
   Point,
   motion,
@@ -22,7 +23,6 @@ export default function Home() {
   const [locked, setLocked] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = board.length;
-
   const slide = useMotionValue(0);
 
   // Adjusty opacity of tiles at the end of the words (right and bottom of grid)
@@ -56,6 +56,42 @@ export default function Home() {
     }
     return 1;
   });
+
+  // function to return back tile styles based on coords
+  const getStyles = useCallback(
+    (rowIndex: number, colIndex: number): MotionStyle => {
+      if (dragDirection === "x" && colIndex % boardSize === 0) {
+        return {
+          x: slide,
+          opacity: opacityStart,
+        };
+      } else if (dragDirection === "x" && (colIndex + 1) % boardSize === 0) {
+        return {
+          x: slide,
+          opacity: opacityEnd,
+        };
+      } else if (dragDirection === "y" && rowIndex === 0) {
+        return {
+          y: slide,
+          opacity: opacityStart,
+        };
+      } else if (dragDirection === "y" && rowIndex === boardSize - 1) {
+        return {
+          y: slide,
+          opacity: opacityEnd,
+        };
+      }
+
+      // if no targetTile or dragDiredction, return all tiles to default
+      // OR tile is not an edge tile, needs to slide in the same direction as dragDirection, but not change opacity
+      return {
+        x: dragDirection === "x" ? slide : undefined,
+        y: dragDirection === "y" ? slide : undefined,
+        opacity: 1,
+      };
+    },
+    [dragDirection, slide, opacityEnd, opacityStart, boardSize]
+  );
 
   // set tileTravelDistance
   useEffect(() => {
@@ -160,23 +196,17 @@ export default function Home() {
               const rowIndex = Math.floor(i / boardSize);
               const colIndex = i % boardSize;
               const coord = `${rowIndex}${colIndex}`;
-
-              // Build style object
-              const style = {
-                x: dragDirection === "x" ? slide : undefined,
-                y: dragDirection === "y" ? slide : undefined,
-                opacity: opacityStart,
-              };
+              const styles = getStyles(rowIndex, colIndex);
 
               return (
                 <motion.div
                   key={coord}
                   className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10"
-                  whileHover={{ scale: !locked ? 1.05 : 1 }}
+                  whileHover={{ scale: !locked ? 1.03 : 1 }}
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
                   drag={!locked}
-                  style={style}
+                  style={styles}
                   onDragStart={handleDragStart}
                   onDrag={handleDrag}
                   dragSnapToOrigin={true}
