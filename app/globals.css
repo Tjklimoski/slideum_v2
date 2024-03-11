@@ -31,3 +31,12 @@ body {
     text-wrap: balance;
   }
 }
+
+/* style to let font size be dynamic in tile */
+[data-coord] {
+  container-type: inline-size;
+
+  span {
+    font-size: calc(1rem + 70cqi);
+  }
+}

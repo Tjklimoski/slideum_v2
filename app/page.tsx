@@ -255,7 +255,7 @@ export default function Game() {
               return (
                 <motion.div
                   key={coord}
-                  className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10"
+                  className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10 text-5xl"
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
                   drag={!locked}
@@ -283,7 +283,10 @@ export default function Game() {
                   }}
                   data-coord={coord}
                 >
-                  {letter.toUpperCase()}
+                  {/* span needed to allow for dynamic font size in relation to tile size */}
+                  <span className="touch-none pointer-events-none select-none">
+                    {letter.toUpperCase()}
+                  </span>
                 </motion.div>
               );
             })}
