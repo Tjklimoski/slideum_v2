@@ -237,7 +237,6 @@ export default function Game() {
                 <motion.div
                   key={coord}
                   className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10"
-                  // whileHover={{ scale: !locked ? 1.03 : 1 }}
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
                   drag={!locked}
