@@ -160,8 +160,12 @@ export default function Game() {
   }, [gridRef, boardSize]);
 
   // Will need to use this .on() to modify the tile values while dragging
+  // change to useMotionValueEvent: https://www.framer.com/motion/use-motion-value-event/
   useEffect(() => {
     const slideUnsubscribe = slide.on("change", latest => {
+      // I get two values, one at the position of my mouse, and the other at the position of my tile after running through the handleDrag function.
+      // should I create a new motionValue called mousePosition, then use mousePosition.set() it at the start of the handleDrag function (which should recieve the pure mouse position). then use it's changeEvent to set the tile values?
+      // or should I call the function that changes the tile values in the handleDrag function, and pass it the event object (MouseEvent)?
       console.log("slide: ", latest);
     });
 
@@ -193,6 +197,7 @@ export default function Game() {
     e: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) {
+    // console.log("mousePos: ", slide);
     if (tileTravelDistance === 0) return slide.set(0);
     setDragDelta(info.delta);
 
@@ -213,8 +218,8 @@ export default function Game() {
 
   return (
     <>
-      <main className="h-[100dvh]">
-        <nav className="py-4 px-6 text-2xl bg-zinc-950 bg-opacity-25 backdrop-blur-md">
+      <main className="h-[100dvh] flex flex-col justify-between sm:block">
+        <nav className="py-2 px-3 sm:py-4 sm:px-6 text-2xl bg-zinc-950 bg-opacity-25 backdrop-blur-md">
           <h1>
             Sl<span className="ms-1">i</span>
             <span className="ms-2">d</span>
@@ -224,7 +229,7 @@ export default function Game() {
           </h1>
         </nav>
 
-        <div className="py-4 px-6">
+        <div className="py-2 px-3 sm:py-4 sm:px-6 mb-6 self-center">
           <motion.button
             className="px-4 py-2 bg-green-700 rounded-full block shadow-lg shadow-green-700/50"
             onClick={() => setBoard([])}
@@ -235,10 +240,10 @@ export default function Game() {
           </motion.button>
         </div>
 
-        <div className="absolute inset-0 grid place-items-center pointer-events-none ">
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none overflow-hidden">
           {/* make grid-cols-3 dynamic to boardSize */}
           <div
-            className="grid grid-cols-3 w-1/3 gap-4 touch-none pointer-events-auto"
+            className="grid grid-cols-3 gap-2 sm:gap-4 touch-none pointer-events-auto max-w-[600px] min-w-[250px] w-4/5 sm:w-3/5"
             ref={gridRef}
           >
             {board.map((letter, i) => {
