@@ -11,6 +11,20 @@ import {
   useTransform,
 } from "framer-motion";
 
+const TILE_STATUS = {
+  neutral: "neutral", // ⬛
+  close: "close", // 🟨
+  correct: "correct", // 🟩
+};
+
+interface Tile {
+  value: string;
+  coord: string;
+  rowIndex: number;
+  colIndex: number;
+  status: keyof typeof TILE_STATUS;
+}
+
 export default function Game() {
   const [board, setBoard] = useState<string[]>([]);
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
