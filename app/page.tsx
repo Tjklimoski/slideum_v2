@@ -84,30 +84,40 @@ export default function Game() {
   // function to return back tile styles based on coords
   const getStyles = useCallback(
     (rowIndex: number, colIndex: number): MotionStyle => {
-      console.log(activeTiles);
-      if (dragDirection === "x" && colIndex % boardSize === 0) {
+      const coord = `${rowIndex}${colIndex}`;
+
+      if (activeTiles.includes(coord)) {
+        if (dragDirection === "x" && colIndex % boardSize === 0) {
+          return {
+            x: slide,
+            opacity: opacityStart,
+          };
+        } else if (dragDirection === "x" && (colIndex + 1) % boardSize === 0) {
+          return {
+            x: slide,
+            opacity: opacityEnd,
+          };
+        } else if (dragDirection === "y" && rowIndex === 0) {
+          return {
+            y: slide,
+            opacity: opacityStart,
+          };
+        } else if (dragDirection === "y" && rowIndex === boardSize - 1) {
+          return {
+            y: slide,
+            opacity: opacityEnd,
+          };
+        }
+      } else {
+        // If not in active tiles, remove x and y being set to slide MotionValue
         return {
-          x: slide,
-          opacity: opacityStart,
-        };
-      } else if (dragDirection === "x" && (colIndex + 1) % boardSize === 0) {
-        return {
-          x: slide,
-          opacity: opacityEnd,
-        };
-      } else if (dragDirection === "y" && rowIndex === 0) {
-        return {
-          y: slide,
-          opacity: opacityStart,
-        };
-      } else if (dragDirection === "y" && rowIndex === boardSize - 1) {
-        return {
-          y: slide,
-          opacity: opacityEnd,
+          x: undefined,
+          y: undefined,
+          opacity: 1,
         };
       }
 
-      // if no targetTile or dragDiredction, return all tiles to default
+      // if no dragDirection, set tile to default styles
       // OR tile is not an edge tile, needs to slide in the same direction as dragDirection, but not change opacity
       return {
         x: dragDirection === "x" ? slide : undefined,
@@ -227,7 +237,7 @@ export default function Game() {
                 <motion.div
                   key={coord}
                   className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md text-5xl flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10"
-                  whileHover={{ scale: !locked ? 1.03 : 1 }}
+                  // whileHover={{ scale: !locked ? 1.03 : 1 }}
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
                   drag={!locked}
