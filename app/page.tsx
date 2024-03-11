@@ -235,6 +235,7 @@ export default function Game() {
           (tileTravelDistance / 2 - 1))
     );
 
+    // I think this approach is giving me a flicker of content, as I don't know the tiles have jumped back until after they've jumped
     if (
       Math.abs(previousSlidePos - slidePos) > tileTravelDistance / 2 - 1 &&
       dragDirection
