@@ -212,7 +212,7 @@ export default function Game() {
 
         <div className="py-4 px-6">
           <motion.button
-            className="px-4 py-2 bg-green-700 rounded-full block"
+            className="px-4 py-2 bg-green-700 rounded-full block shadow-lg shadow-green-700/50"
             onClick={() => setBoard([])}
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", bounce: 0.65 }}
