@@ -228,14 +228,15 @@ export default function Game() {
     // with slide at 0 being centered in the range.
     // if range is 100, and slide is 51, slidePos is -49.
     // https://math.stackexchange.com/questions/3838296/integer-function-that-loops-over-a-range
-    const slidePos =
+    const slidePos = Math.round(
       Math.sign(slide.get()) *
-      (((Math.abs(slide.get()) + (tileTravelDistance / 2 - 1)) %
-        tileTravelDistance) -
-        (tileTravelDistance / 2 - 1));
+        (((Math.abs(slide.get()) + (tileTravelDistance / 2 - 1)) %
+          tileTravelDistance) -
+          (tileTravelDistance / 2 - 1))
+    );
 
     if (
-      Math.abs(previousSlidePos - slidePos) > tileTravelDistance / 2 &&
+      Math.abs(previousSlidePos - slidePos) > tileTravelDistance / 2 - 1 &&
       dragDirection
     ) {
       shiftValues(info.delta[dragDirection]);
