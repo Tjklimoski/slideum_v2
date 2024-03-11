@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
-import type { ResultMatrix } from "slideum_board_generator";
 import {
   MotionStyle,
   PanInfo,
@@ -13,7 +12,7 @@ import {
 } from "framer-motion";
 
 export default function Home() {
-  const [board, setBoard] = useState<ResultMatrix>([]);
+  const [board, setBoard] = useState<string[]>([]);
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
     undefined
   );
@@ -22,7 +21,7 @@ export default function Home() {
   const [targetTile, setTargetTile] = useState<String | null>(null);
   const [locked, setLocked] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
-  const boardSize = board.length;
+  const boardSize = Math.sqrt(board.length);
   const slide = useMotionValue(0);
 
   // Adjusty opacity of tiles at the end of the words (right and bottom of grid)
@@ -128,7 +127,7 @@ export default function Home() {
       return await generator.getBoard();
     }
 
-    generateBoard().then(board => setBoard(board));
+    generateBoard().then(board => setBoard(board.flat()));
   }, [board]);
 
   function handleDragStart(e: MouseEvent | TouchEvent | PointerEvent) {
@@ -192,7 +191,7 @@ export default function Home() {
             className="grid grid-cols-3 w-1/3 gap-4 touch-none pointer-events-auto"
             ref={gridRef}
           >
-            {board.flat().map((letter, i) => {
+            {board.map((letter, i) => {
               const rowIndex = Math.floor(i / boardSize);
               const colIndex = i % boardSize;
               const coord = `${rowIndex}${colIndex}`;
