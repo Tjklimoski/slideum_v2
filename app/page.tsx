@@ -13,7 +13,7 @@ import {
 
 const TILE_STATUS = {
   neutral: "neutral", // ⬛
-  close: "close", // 🟨
+  close: "close", //.... 🟨
   correct: "correct", // 🟩
 };
 
@@ -26,7 +26,7 @@ interface Tile {
 }
 
 export default function Game() {
-  const [board, setBoard] = useState<string[]>([]);
+  const [board, setBoard] = useState<Tile[]>([]);
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
     undefined
   );
@@ -39,29 +39,21 @@ export default function Game() {
   const slide = useMotionValue(0);
 
   const activeTiles = useMemo((): string[] => {
-    if (boardSize === 0 || !targetTile || !dragDirection) return [];
+    if (board.length === 0 || !targetTile || !dragDirection) return [];
 
     // If traveling in x direction, we want elements in the same row as the targetTile coord
     // If traveling in y direction, we want elements in the same col as the targetTile coord
     const indexPos = parseInt(targetTile[dragDirection === "x" ? 0 : 1]);
 
-    const active = [];
-
-    for (let i = 0; i < boardSize ** 2; i++) {
-      if (active.length === boardSize) break;
-
-      const rowIndex = Math.floor(i / boardSize);
-      const colIndex: number = i % boardSize;
+    return board.reduce((arr: string[], tile) => {
       if (
-        (dragDirection === "x" && indexPos === rowIndex) ||
-        (dragDirection === "y" && indexPos === colIndex)
-      ) {
-        active.push(`${rowIndex}${colIndex}`);
-      }
-    }
-
-    return active;
-  }, [targetTile, boardSize, dragDirection]);
+        (dragDirection === "x" && indexPos === tile.rowIndex) ||
+        (dragDirection === "y" && indexPos === tile.colIndex)
+      )
+        arr.push(tile.coord);
+      return arr;
+    }, []);
+  }, [targetTile, board, dragDirection]);
 
   // opacity values for tiles at the end of the words (right and bottom of grid)
   const opacityEnd = useTransform(() => {
@@ -97,26 +89,28 @@ export default function Game() {
 
   // function to return back tile styles based on coords
   const getStyles = useCallback(
-    (rowIndex: number, colIndex: number): MotionStyle => {
-      const coord = `${rowIndex}${colIndex}`;
-
-      if (activeTiles.includes(coord)) {
-        if (dragDirection === "x" && colIndex % boardSize === 0) {
+    (tile: Tile): MotionStyle => {
+      console.log("ACTIVE TILES: ", activeTiles);
+      if (activeTiles.includes(tile.coord)) {
+        if (dragDirection === "x" && tile.colIndex % boardSize === 0) {
           return {
             x: slide,
             opacity: opacityStart,
           };
-        } else if (dragDirection === "x" && (colIndex + 1) % boardSize === 0) {
+        } else if (
+          dragDirection === "x" &&
+          (tile.colIndex + 1) % boardSize === 0
+        ) {
           return {
             x: slide,
             opacity: opacityEnd,
           };
-        } else if (dragDirection === "y" && rowIndex === 0) {
+        } else if (dragDirection === "y" && tile.rowIndex === 0) {
           return {
             y: slide,
             opacity: opacityStart,
           };
-        } else if (dragDirection === "y" && rowIndex === boardSize - 1) {
+        } else if (dragDirection === "y" && tile.rowIndex === boardSize - 1) {
           return {
             y: slide,
             opacity: opacityEnd,
@@ -181,7 +175,23 @@ export default function Game() {
       return await generator.getBoard();
     }
 
-    generateBoard().then(board => setBoard(board.flat()));
+    generateBoard().then(board =>
+      setBoard(
+        board.flat().map((value, i, arr) => {
+          const boardSize = Math.sqrt(arr.length);
+          const rowIndex = Math.floor(i / boardSize);
+          const colIndex = i % boardSize;
+          const coord = `${rowIndex}${colIndex}`;
+          return {
+            value,
+            coord,
+            rowIndex,
+            colIndex,
+            status: TILE_STATUS.neutral,
+          } as Tile;
+        })
+      )
+    );
   }, [board]);
 
   function handleDragStart(e: MouseEvent | TouchEvent | PointerEvent) {
@@ -246,15 +256,12 @@ export default function Game() {
             className="grid grid-cols-3 gap-2 sm:gap-4 touch-none pointer-events-auto max-w-[600px] min-w-[250px] w-4/5 sm:w-3/5"
             ref={gridRef}
           >
-            {board.map((letter, i) => {
-              const rowIndex = Math.floor(i / boardSize);
-              const colIndex = i % boardSize;
-              const coord = `${rowIndex}${colIndex}`;
-              const styles = getStyles(rowIndex, colIndex);
+            {board.map(tile => {
+              const styles = getStyles(tile);
 
               return (
                 <motion.div
-                  key={coord}
+                  key={tile.coord}
                   className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10 text-5xl"
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
@@ -281,11 +288,11 @@ export default function Game() {
                     setLocked(false);
                     setTargetTile(null);
                   }}
-                  data-coord={coord}
+                  data-coord={tile.coord}
                 >
                   {/* span needed to allow for dynamic font size in relation to tile size */}
                   <span className="touch-none pointer-events-none select-none">
-                    {letter.toUpperCase()}
+                    {tile.value.toUpperCase()}
                   </span>
                 </motion.div>
               );
