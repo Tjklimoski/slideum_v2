@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
 import {
   MotionStyle,
@@ -11,7 +11,7 @@ import {
   useTransform,
 } from "framer-motion";
 
-export default function Home() {
+export default function Game() {
   const [board, setBoard] = useState<string[]>([]);
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
     undefined
@@ -24,7 +24,32 @@ export default function Home() {
   const boardSize = Math.sqrt(board.length);
   const slide = useMotionValue(0);
 
-  // Adjusty opacity of tiles at the end of the words (right and bottom of grid)
+  const activeTiles = useMemo((): string[] => {
+    if (boardSize === 0 || !targetTile || !dragDirection) return [];
+
+    // If traveling in x direction, we want elements in the same row as the targetTile coord
+    // If traveling in y direction, we want elements in the same col as the targetTile coord
+    const indexPos = parseInt(targetTile[dragDirection === "x" ? 0 : 1]);
+
+    const active = [];
+
+    for (let i = 0; i < boardSize ** 2; i++) {
+      if (active.length === boardSize) break;
+
+      const rowIndex = Math.floor(i / boardSize);
+      const colIndex: number = i % boardSize;
+      if (
+        (dragDirection === "x" && indexPos === rowIndex) ||
+        (dragDirection === "y" && indexPos === colIndex)
+      ) {
+        active.push(`${rowIndex}${colIndex}`);
+      }
+    }
+
+    return active;
+  }, [targetTile, boardSize, dragDirection]);
+
+  // opacity values for tiles at the end of the words (right and bottom of grid)
   const opacityEnd = useTransform(() => {
     if (!gridRef.current || !dragDelta || !dragDirection) return 1;
 
@@ -40,7 +65,7 @@ export default function Home() {
     return 1;
   });
 
-  // Adjusty opacity of tiles at the start of the words (left and top of grid)
+  // opacity values for tiles at the start of the words (left and top of grid)
   const opacityStart = useTransform(() => {
     if (!gridRef.current || !dragDelta || !dragDirection) return 1;
 
@@ -59,6 +84,7 @@ export default function Home() {
   // function to return back tile styles based on coords
   const getStyles = useCallback(
     (rowIndex: number, colIndex: number): MotionStyle => {
+      console.log(activeTiles);
       if (dragDirection === "x" && colIndex % boardSize === 0) {
         return {
           x: slide,
@@ -89,7 +115,7 @@ export default function Home() {
         opacity: 1,
       };
     },
-    [dragDirection, slide, opacityEnd, opacityStart, boardSize]
+    [dragDirection, slide, opacityEnd, opacityStart, boardSize, activeTiles]
   );
 
   // set tileTravelDistance
