@@ -205,8 +205,6 @@ export function validateBoard(board: Tile[], correctBoard: Tile[]): Tile[] {
   const correctBoardWords = getWords(correctTiles);
   const clientBoardWords = getWords(board);
 
-  console.log(correctBoardWords);
-
   clientTiles = markAllNeutral(clientTiles);
 
   // compare to find shared words - mark tiles yellow

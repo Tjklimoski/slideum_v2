@@ -206,13 +206,8 @@ export default function Game() {
       setCorrectBoard(tiles);
 
       const newTiles = tiles.map(tile => ({ ...tile }));
-
       const randomizedTiles = randomizeBoard(newTiles);
-      console.log("RAND", randomizedTiles);
-
       const validatedTiles = validateBoard(randomizedTiles, tiles);
-      console.log("VALIDATED: ", validatedTiles);
-      console.log("CORRECT TILES: ", tiles);
 
       setBoard(validatedTiles);
       setSolved(false);
