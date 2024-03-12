@@ -326,10 +326,16 @@ export default function Game() {
                     setDragDirection(undefined);
                     setLocked(false);
                     setTargetTile(null);
-                    setBoard(validateBoard(board, correctBoard));
-                    if (isSolved(board)) {
-                      setLocked(true);
-                    }
+                    setBoard(currentBoard => {
+                      const validatedBoard = validateBoard(
+                        currentBoard,
+                        correctBoard
+                      );
+                      if (isSolved(validatedBoard)) {
+                        setLocked(true);
+                      }
+                      return validatedBoard;
+                    });
                   }}
                   data-coord={tile.coord}
                 >
