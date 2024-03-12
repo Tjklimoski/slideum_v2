@@ -2,31 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
+import { randomizeBoard, TILE_STATUS, validateBoard } from "@/util/gameLogic";
+import type { Tile } from "@/util/gameLogic";
 import {
   MotionStyle,
   PanInfo,
   Point,
   motion,
   useMotionValue,
-  useMotionValueEvent,
   useTransform,
 } from "framer-motion";
 
-const TILE_STATUS = {
-  neutral: "neutral", // ⬛
-  close: "close", //.... 🟨
-  correct: "correct", // 🟩
-};
-
-interface Tile {
-  value: string;
-  coord: string;
-  rowIndex: number;
-  colIndex: number;
-  status: keyof typeof TILE_STATUS;
-}
-
 export default function Game() {
+  const [correctBoard, setCorrectBoard] = useState<Tile[]>([]);
   const [board, setBoard] = useState<Tile[]>([]);
   const [dragDirection, setDragDirection] = useState<"x" | "y" | undefined>(
     undefined
@@ -186,23 +174,37 @@ export default function Game() {
       return await generator.getBoard();
     }
 
-    generateBoard().then(board =>
-      setBoard(
-        board.flat().map((value, i, arr) => {
-          const boardSize = Math.sqrt(arr.length);
-          const rowIndex = Math.floor(i / boardSize);
-          const colIndex = i % boardSize;
-          const coord = `${rowIndex}${colIndex}`;
-          return {
-            value,
-            coord,
-            rowIndex,
-            colIndex,
-            status: TILE_STATUS.neutral,
-          } as Tile;
-        })
-      )
-    );
+    generateBoard().then(board => {
+      console.log("ANWSER BOARD: ", board.flat());
+
+      const tiles: Tile[] = board.flat().map((value, i, arr) => {
+        const boardSize = Math.sqrt(arr.length);
+        const rowIndex = Math.floor(i / boardSize);
+        const colIndex = i % boardSize;
+        const coord = `${rowIndex}${colIndex}`;
+
+        return {
+          value,
+          coord,
+          rowIndex,
+          colIndex,
+          status: TILE_STATUS.neutral,
+        };
+      });
+
+      setCorrectBoard(tiles);
+
+      const newTiles = tiles.map(tile => ({ ...tile }));
+
+      const randomizedTiles = randomizeBoard(newTiles);
+      console.log("RAND", randomizedTiles);
+
+      const validatedTiles = validateBoard(randomizedTiles, tiles);
+      console.log("VALIDATED: ", validatedTiles);
+      console.log("CORRECT TILES: ", tiles);
+
+      setBoard(validatedTiles);
+    });
   }, [board]);
 
   function handleDragStart(e: MouseEvent | TouchEvent | PointerEvent) {
@@ -283,7 +285,17 @@ export default function Game() {
               return (
                 <motion.div
                   key={tile.coord}
-                  className="bg-zinc-700  bg-opacity-35 backdrop-blur-lg w-full aspect-square rounded-md flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10 text-5xl"
+                  className={`backdrop-blur-lg w-full aspect-square rounded-md flex justify-center items-center select-none cursor-grab active:cursor-grabbing border-s border-t border-zinc-300 border-opacity-10 text-5xl ${
+                    tile.status === TILE_STATUS.close &&
+                    "bg-yellow-400 bg-opacity-75"
+                  } ${
+                    tile.status === TILE_STATUS.correct &&
+                    "bg-green-500 bg-opacity-75"
+                  }
+                  ${
+                    tile.status === TILE_STATUS.neutral &&
+                    "bg-zinc-700  bg-opacity-35"
+                  }`}
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
                   drag={!locked}
@@ -308,6 +320,7 @@ export default function Game() {
                     setDragDirection(undefined);
                     setLocked(false);
                     setTargetTile(null);
+                    setBoard(validateBoard(board, correctBoard));
                   }}
                   data-coord={tile.coord}
                 >
