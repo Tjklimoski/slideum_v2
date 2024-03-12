@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Generator } from "slideum_board_generator";
-import { randomizeBoard, TILE_STATUS, validateBoard } from "@/util/gameLogic";
+import {
+  isSolved,
+  randomizeBoard,
+  TILE_STATUS,
+  validateBoard,
+} from "@/util/gameLogic";
 import type { Tile } from "@/util/gameLogic";
 import {
   MotionStyle,
@@ -204,6 +209,7 @@ export default function Game() {
       console.log("CORRECT TILES: ", tiles);
 
       setBoard(validatedTiles);
+      setLocked(false);
     });
   }, [board]);
 
@@ -321,6 +327,9 @@ export default function Game() {
                     setLocked(false);
                     setTargetTile(null);
                     setBoard(validateBoard(board, correctBoard));
+                    if (isSolved(board)) {
+                      setLocked(true);
+                    }
                   }}
                   data-coord={tile.coord}
                 >
