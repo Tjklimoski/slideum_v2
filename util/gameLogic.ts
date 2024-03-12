@@ -325,6 +325,6 @@ function markCorrectWords(
   return clientTiles;
 }
 
-export function isSolved(board: Tile[]): Boolean {
+export function isSolved(board: Tile[]): boolean {
   return board.every(tile => tile.status === TILE_STATUS.correct);
 }

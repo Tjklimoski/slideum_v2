@@ -28,10 +28,16 @@ export default function Game() {
   const [tileTravelDistance, setTileTravelDistance] = useState(0);
   const [targetTile, setTargetTile] = useState<String | null>(null);
   const [locked, setLocked] = useState(false);
+  const [solved, setSolved] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const boardSize = Math.sqrt(board.length);
   const slide = useMotionValue(0);
   const [previousSlidePos, setPreviousSlidePos] = useState(0);
+
+  // Lock board if it's solved
+  useEffect(() => {
+    setSolved(isSolved(board));
+  }, [board, setLocked]);
 
   const activeTiles = useMemo((): Tile[] => {
     if (board.length === 0 || !targetTile || !dragDirection) return [];
@@ -209,7 +215,7 @@ export default function Game() {
       console.log("CORRECT TILES: ", tiles);
 
       setBoard(validatedTiles);
-      setLocked(false);
+      setSolved(false);
     });
   }, [board]);
 
@@ -304,7 +310,7 @@ export default function Game() {
                   }`}
                   whileTap={{ scale: !locked ? 0.95 : 1 }}
                   whileDrag={{ scale: 1 }}
-                  drag={!locked}
+                  drag={!locked && !solved}
                   style={styles}
                   onDragStart={handleDragStart}
                   onDrag={handleDrag}
@@ -321,21 +327,12 @@ export default function Game() {
                     // prevents user interacting with board, preventing glitches
                     // unlocks in onDragTransitionEnd
                     setLocked(true);
+                    setBoard(validateBoard(board, correctBoard));
                   }}
                   onDragTransitionEnd={() => {
                     setDragDirection(undefined);
                     setLocked(false);
                     setTargetTile(null);
-                    setBoard(currentBoard => {
-                      const validatedBoard = validateBoard(
-                        currentBoard,
-                        correctBoard
-                      );
-                      if (isSolved(validatedBoard)) {
-                        setLocked(true);
-                      }
-                      return validatedBoard;
-                    });
                   }}
                   data-coord={tile.coord}
                 >
